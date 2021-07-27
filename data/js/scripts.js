@@ -1,20 +1,15 @@
 
 const app = new Vue({
     el: '#app',
-    components: {
-        "date-picker": DatePicker,
-    },
     data: {
         site_settings: {
             site_name: "Offico score",
-            site_url: "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/avatars/4a/4a236972a7e48a22dba9c60397d106d9053249c4_full.jpg",
         },
         timeframe: Date.now(),
         settings: {
             steam_id: "76561198020969037",
             matches_count: "35",
-            hours_from: 14,
-            scoreboard: true,
+            hours_minus: 14,
         },
         endpoints: {
             "last_matches": "https://aoe2.net/api/player/matches?game=aoe2de",
@@ -40,10 +35,11 @@ const app = new Vue({
 
         this.get_url_info();
 
-        const hours_from = this.settings.hours_from;
+        // Change hours.
+        const hours_minus = this.settings.hours_minus;
 
         const timeframe_object = new Date(this.timeframe);
-        timeframe_object.setHours(timeframe_object.getHours() - hours_from);
+        timeframe_object.setHours(timeframe_object.getHours() - hours_minus);
         this.timeframe = Date.parse(timeframe_object);
 
         this.get_score();
@@ -51,9 +47,6 @@ const app = new Vue({
 
     },
     computed: {
-        datetime: function() {
-            return Date.now();
-        },
         last_matches_url: function() {
             return `${this.endpoints.last_matches}&steam_id=${this.settings.steam_id}&count=${this.settings.matches_count}`;
         },
@@ -63,22 +56,13 @@ const app = new Vue({
             const url = new URL(window.location.href);
             const search_params = new URLSearchParams(url.search);
 
-            // Steam ID.
-            if (search_params.has("steam_id")) {
-                const steam_id = search_params.get("steam_id");
-                this.settings.steam_id = steam_id;
-            }
+            const params = ["steam_id", "hours_minus", "matches_count"];
 
-            // Hours from.
-            if (search_params.has("hours_from")) {
-                const hours_from = search_params.get("hours_from");
-                this.settings.hours_from = hours_from;
-            }
-
-            // Scoreboard.
-            if (search_params.has("scoreboard")) {
-                const scoreboard = search_params.get("scoreboard");
-                this.settings.scoreboard = scoreboard;
+            // Apply found url params to settings.
+            for (let param of params) {
+                if (search_params.has(param)) {
+                    this.settings[param] = search_params.get(param);
+                }
             }
 
         },
@@ -202,12 +186,5 @@ const app = new Vue({
             this.periodic_check.timer = false;
 
         },
-        slide_toggle(context) {
-            
-            if (context == "timeframe") {
-                document.querySelector('.timeframe.slide-toggle').classList.toggle('-active');
-            }
-
-        }
     },
 });

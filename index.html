@@ -5,25 +5,13 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	<title>Offico score</title>
+	<title>Offico scoreboard</title>
 
 	<link rel="stylesheet" href="./data/css/bootstrap.min.css">
-	<link rel="stylesheet" href="./data/css//vue2-datepicker.min.css">
 
 	<style>
 		.-plus:before {
 			content: "+";
-		}
-
-		.slide-toggle {
-			overflow-y: hidden;
-			max-height: 500px; /* approximate max height */
-
-			transition: all .35s;
-		}
-
-		.slide-toggle:not(.-active) {
-			max-height: 0;
 		}
 
 		.scoreboard {
@@ -47,105 +35,14 @@
 </head>
 <body>
 	<main id="app">
-		<div class="scoreboard" v-if="settings.scoreboard">
-			<img src="./data/img/scoreboard.png" alt="">
+		<div class="scoreboard">
+			<img src="./data/img/scoreboard.png" alt="scoreboard">
 			<span class="score wins">{{score.wins}}</span>
 			<span class="score losses">{{score.losses}}</span>
 		</div>
-
-		<nav class="navbar navbar-expand-lg navbar-dark bg-primary" v-if="!settings.scoreboard">
-			<div class="container">
-				<a class="navbar-brand" href="/">
-					<img v-bind:src="site_settings.site_url" width="44" height="44" class="d-inline-block me-2" alt="Offico">
-					{{site_settings.site_name}}
-				</a>
-
-				<button class="navbar-toggler d-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
-					<span class="navbar-toggler-icon"></span>
-				</button>
-		  
-				<div class="collapse navbar-collapse" id="navbarColor01" style="display: none !important;">
-					<ul class="navbar-nav me-auto">
-						<li class="nav-item">
-							<a class="nav-link active" href="#">Home
-								<span class="visually-hidden">(current)</span>
-							</a>
-						</li>
-
-						<li class="nav-item">
-							<a class="nav-link" href="#">Pricing</a>
-						</li>
-
-						<li class="nav-item dropdown">
-							<a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Dropdown</a>
-							<div class="dropdown-menu">
-								<a class="dropdown-item" href="#">Action</a>
-								<a class="dropdown-item" href="#">Another action</a>
-								<a class="dropdown-item" href="#">Something else here</a>
-								<div class="dropdown-divider"></div>
-								<a class="dropdown-item" href="#">Separated link</a>
-							</div>
-						</li>
-					</ul>
-
-					<form class="d-flex">
-						<input class="form-control me-sm-2" type="text" placeholder="Search">
-						<button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
-					</form>
-				</div>
-			</div>
-		</nav>
-
-		<section class="pt-5" v-if="!settings.scoreboard">
-			<div class="container">
-				<h2 clas="mb-3">Skóre se zobrazuje od {{ convert_unix_to_date(timeframe) }}</h2>
-
-				<button class="btn btn-outline-primary" v-on:click="slide_toggle('timeframe')">Změnit datum a čas</button>
-
-				<div class="timeframe slide-toggle my-3">
-					<date-picker v-model="timeframe" type="datetime" value-type="timestamp"></date-picker>
-
-					<button class="btn btn-primary" v-on:click="refresh_data();">Refreshnout data</button>
-				</div>
-
-				<div class="score mb-3">
-					<h2>Skóre:</h2>
-			
-					<h2>
-						<span class="text-success">{{score.wins}}</span> : <span class="text-danger">{{score.losses}}</span> 
-					</h2>
-
-					<p v-if="score.missing">Detekován dohraný zápas. Skóre se ještě nezaznamenalo. To většinou trvá 3 - 6 minut.</p>
-				</div>
-
-				<div class="elo-change mb-3">
-					<h2>Změna ela:</h2>
-					
-					<h2>
-						<span v-bind:class="score.elo_change >= 0 ? 'text-success -plus' : 'text-danger'">{{score.elo_change}}</span>
-					</h2>
-				</div>
-
-				<div class="current-match mb-3" v-if="current_match.active">
-					<h2>Aktuální zápas:</h2>
-		
-					<h3>
-						<span v-for="(player, index) in current_match.players">
-							<img v-bind:src="`https://www.countryflags.io/${player.country}/flat/32.png`" v-bind:alt="player.country">
-							{{player.name}}
-
-							<br>
-			
-							<span v-if="index == 0">vs <br></span>
-						</span>
-					</h2>
-				</div>
-			</div>
-		</section>
 	</main>
 
 	<script src="./data/js/vue.min.js"></script>
-	<script src="./data/js/vue2-datepicker.min.js"></script>
 	<script src="./data/js/scripts.min.js"></script>
 </body>
 </html>
