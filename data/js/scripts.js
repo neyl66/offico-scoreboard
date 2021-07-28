@@ -1,9 +1,4 @@
 
-/**
- * TODO:
- * fix double digit score
- */
-
 const app = new Vue({
     el: '#app',
     data: {
@@ -106,6 +101,7 @@ const app = new Vue({
                 for (let i = 0; i < last_matches.length; i++) {
                     const match = last_matches[i];
     
+                    // Match data.
                     const started_unix = match.started * 1000;
                     const finished_unix = match.finished * 1000;
                     const players = match.players;

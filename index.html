@@ -10,10 +10,6 @@
 	<link rel="stylesheet" href="./data/css/bootstrap.min.css">
 
 	<style>
-		.-plus:before {
-			content: "+";
-		}
-
 		.scoreboard {
 			display: inline-block;
 			position: relative;
@@ -25,11 +21,20 @@
 			top: 50%;
 			left: 50%;
 		}
-		.scoreboard .score.wins {
+		.scoreboard .score.-double-digit {
+			font-size: 1.5rem;
+		}
+		.scoreboard .score.-wins {
 			transform: translate(-50px, -50%);
 		}
-		.scoreboard .score.losses {
+		.scoreboard .score.-wins.-double-digit {
+			transform: translate(-55px, -50%);
+		}
+		.scoreboard .score.-losses {
 			transform: translate(32px, -50%);
+		}
+		.scoreboard .score.-losses.-double-digit {
+			transform: translate(27px, -50%);
 		}
 	</style>
 </head>
@@ -37,12 +42,12 @@
 	<main id="app">
 		<div class="scoreboard">
 			<img src="./data/img/scoreboard.png" alt="scoreboard">
-			<span class="score wins">{{score.wins}}</span>
-			<span class="score losses">{{score.losses}}</span>
+			<span class="score -wins" v-bind:class="score.wins > 9 ? '-double-digit' : ''">{{score.wins}}</span>
+			<span class="score -losses" v-bind:class="score.losses > 9 ? '-double-digit' : ''">{{score.losses}}</span>
 		</div>
 	</main>
 
 	<script src="./data/js/vue.min.js"></script>
-	<script src="./data/js/scripts.min.js?v=1.1"></script>
+	<script src="./data/js/scripts.min.js?v=1.2"></script>
 </body>
 </html>
