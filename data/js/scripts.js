@@ -1,4 +1,9 @@
 
+/**
+ * TODO:
+ * fix double digit score
+ */
+
 const app = new Vue({
     el: '#app',
     data: {
@@ -8,8 +13,9 @@ const app = new Vue({
         timeframe: Date.now(),
         settings: {
             steam_id: "76561198020969037",
-            matches_count: "35",
+            matches_count: "50",
             hours_minus: 14,
+            num_players: 2,
         },
         endpoints: {
             "last_matches": "https://aoe2.net/api/player/matches?game=aoe2de",
@@ -28,19 +34,16 @@ const app = new Vue({
         },
         periodic_check: {
             timer: false,
-            interval: 60 * 1000, // 1 minute
+            interval: 60 * 1000,
         },
     },
     created() {
 
+        // Override settings from url data.
         this.get_url_info();
 
-        // Change hours.
-        const hours_minus = this.settings.hours_minus;
-
-        const timeframe_object = new Date(this.timeframe);
-        timeframe_object.setHours(timeframe_object.getHours() - hours_minus);
-        this.timeframe = Date.parse(timeframe_object);
+        // Deduct hours from current time.
+        this.change_hours();
 
         this.get_score();
         this.start_periodic_check();
@@ -56,7 +59,8 @@ const app = new Vue({
             const url = new URL(window.location.href);
             const search_params = new URLSearchParams(url.search);
 
-            const params = ["steam_id", "hours_minus", "matches_count"];
+            // Available url parameters to override settings.
+            const params = ["steam_id", "hours_minus", "matches_count", "num_players"];
 
             // Apply found url params to settings.
             for (let param of params) {
@@ -66,19 +70,14 @@ const app = new Vue({
             }
 
         },
-        convert_unix_to_date(unix_time, multiply) {
+        change_hours() {
+                
+            const hours_minus = this.settings.hours_minus;
 
-            let milliseconds = unix_time;
+            const timeframe_object = new Date(this.timeframe);
+            timeframe_object.setHours(timeframe_object.getHours() - hours_minus);
+            this.timeframe = Date.parse(timeframe_object);
 
-            if (multiply) {
-                milliseconds = unix_time * 1000;
-            }
-
-            let date = new Date(milliseconds)
-
-            let date_string = date.toLocaleString();
-
-            return date_string;
         },
         async get_last_matches() {
 
@@ -99,13 +98,23 @@ const app = new Vue({
                     console.log("matches not found")
                     return;
                 }
+
+                // Reset settings.
+                this.reset_settings();
     
+                // Loop through last matches.
                 for (let i = 0; i < last_matches.length; i++) {
                     const match = last_matches[i];
     
                     const started_unix = match.started * 1000;
                     const finished_unix = match.finished * 1000;
                     const players = match.players;
+                    const num_players = match.num_players;
+
+                    // Skip games based on number of players.
+                    if (num_players != this.settings.num_players) {
+                        continue;
+                    }
     
                     // Skip currently played game.
                     if (finished_unix == 0) {
@@ -150,6 +159,15 @@ const app = new Vue({
             });
 
         },
+        reset_settings() {
+
+            this.score.wins = 0;
+            this.score.losses = 0;
+            this.score.elo_change = 0;
+            this.score.missing = false;
+            this.current_match.active = false;
+
+        },
         refresh_data() {
 
             if (this.loading) {
@@ -157,13 +175,6 @@ const app = new Vue({
             }
 
             this.loading = true;
-
-            // Reset data.
-            this.score.wins = 0;
-            this.score.losses = 0;
-            this.score.elo_change = 0;
-            this.score.missing = false;
-            this.current_match.active = false;
 
             this.get_score();
 
