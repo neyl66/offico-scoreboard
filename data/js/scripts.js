@@ -12,34 +12,43 @@ const civ_item = {
         return {
             player_index: -1,
             civ_icon_url: "",
-            left_px = 10,
         }
+    },
+    computed: {
+        left_px: function() {
+
+            let left_px_start = 0;
+            const left_px_step = 30;
+
+            if (this.player_type == "player") {
+                left_px_start = 10;
+    
+                if (this.index == 0) {
+                    left_px = left_px_start;
+                } else {
+                    left_px = left_px_start + (this.index * left_px_step);
+                }
+    
+            } else if (this.player_type == "enemy") {
+                left_px_start = 380;
+    
+                if (this.index == 0) {
+                    left_px = left_px_start;
+                } else {
+                    left_px = left_px_start + (this.index * left_px_step);
+                }
+    
+            }
+
+            return left_px;
+        },
     },
     created() {
 
-        let left_px_start = 0;
-        const left_px_step = 30;
-
         if (this.player_type == "player") {
-            left_px_start = 10;
             this.player_index = this.match.players.findIndex(player => player.steam_id == this.steam_id);
-
-            if (this.index == 0) {
-                this.left_px = left_px_start;
-            } else {
-                this.left_px = left_px_start + (this.index * left_px_step);
-            }
-
         } else if (this.player_type == "enemy") {
-            left_px_start = 380;
             this.player_index = this.match.players.findIndex(player => player.steam_id != this.steam_id);
-
-            if (this.index == 0) {
-                this.left_px = left_px_start;
-            } else {
-                this.left_px = left_px_start + (this.index * left_px_step);
-            }
-
         }
 
         if (this.player_index != -1) {
@@ -90,6 +99,11 @@ const app = new Vue({
         civ_id = 0,
         player_index = -1,
     },
+    computed: {
+        last_matches_url: function() {
+            return `${this.endpoints.last_matches}&steam_id=${this.settings.steam_id}&count=${this.settings.matches_count}`;
+        },
+    },
     created() {
 
         // Override settings from url data.
@@ -101,11 +115,6 @@ const app = new Vue({
         this.get_score();
         this.start_periodic_check();
 
-    },
-    computed: {
-        last_matches_url: function() {
-            return `${this.endpoints.last_matches}&steam_id=${this.settings.steam_id}&count=${this.settings.matches_count}`;
-        },
     },
     methods: {
         get_url_info() {
