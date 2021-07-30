@@ -36,6 +36,14 @@
 		.scoreboard .score.-losses.-double-digit {
 			transform: translate(27px, -50%);
 		}
+
+		.player-civ {
+			width: 30px;
+			height: auto;
+			position: absolute;
+			top: 103px;
+			left: 10px;
+		}
 	</style>
 </head>
 <body>
@@ -44,10 +52,22 @@
 			<img src="./data/img/scoreboard.png" alt="scoreboard">
 			<span class="score -wins" v-bind:class="score.wins > 9 ? '-double-digit' : ''">{{score.wins}}</span>
 			<span class="score -losses" v-bind:class="score.losses > 9 ? '-double-digit' : ''">{{score.losses}}</span>
+
+			<div class="player-civs -player" v-if="settings.show_player_civs == 'yes'">
+				<civ-item v-for="(match, index) in last_matches" v-bind:key="match.match_id" v-bind:match="match" v-bind:steam_id="settings.steam_id" v-bind:civ_icon="endpoints.civ_icon" player_type="player" v-bind:index="index"></civ-item>
+			</div>
+	
+			<div class="player-civs -enemy" v-if="settings.show_player_civs == 'yes'">
+				<civ-item v-for="(match, index) in last_matches" v-bind:key="match.match_id" v-bind:match="match" v-bind:steam_id="settings.steam_id" v-bind:civ_icon="endpoints.civ_icon" player_type="enemy" v-bind:index="index"></civ-item>
+			</div>
 		</div>
 	</main>
 
+	<script type="text/x-template" id="civ-item">
+		<img class="player-civ" v-if="index < 8 && player_index != -1" v-bind:src="civ_icon_url" alt="" v-bind:style="{left: left_px + 'px'}">
+    </script>
+
 	<script src="./data/js/vue.min.js"></script>
-	<script src="./data/js/scripts.min.js?v=1.2"></script>
+	<script src="./data/js/scripts.min.js?v=1.3"></script>
 </body>
 </html>

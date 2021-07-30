@@ -1,6 +1,59 @@
 
+const civ_item = {
+    props: [
+        "match",
+        "steam_id",
+        "civ_icon",
+        "player_type",
+        "index",
+    ],
+    template: "#civ-item",
+    data() {
+        return {
+            player_index: -1,
+            civ_icon_url: "",
+            left_px = 10,
+        }
+    },
+    created() {
+
+        let left_px_start = 0;
+        const left_px_step = 30;
+
+        if (this.player_type == "player") {
+            left_px_start = 10;
+            this.player_index = this.match.players.findIndex(player => player.steam_id == this.steam_id);
+
+            if (this.index == 0) {
+                this.left_px = left_px_start;
+            } else {
+                this.left_px = left_px_start + (this.index * left_px_step);
+            }
+
+        } else if (this.player_type == "enemy") {
+            left_px_start = 380;
+            this.player_index = this.match.players.findIndex(player => player.steam_id != this.steam_id);
+
+            if (this.index == 0) {
+                this.left_px = left_px_start;
+            } else {
+                this.left_px = left_px_start + (this.index * left_px_step);
+            }
+
+        }
+
+        if (this.player_index != -1) {
+            this.civ_icon_url = this.civ_icon.replace('civ_id', this.match.players[this.player_index].civ);
+        }
+
+    },
+};
+
 const app = new Vue({
     el: '#app',
+    components: {
+        "civ-item": civ_item,
+    },
     data: {
         site_settings: {
             site_name: "Offico score",
@@ -11,9 +64,12 @@ const app = new Vue({
             matches_count: "50",
             hours_minus: 14,
             num_players: 2,
+            from_date: "",
+            show_player_civs: "yes",
         },
         endpoints: {
             "last_matches": "https://aoe2.net/api/player/matches?game=aoe2de",
+            "civ_icon": "https://aoe2.club/assets/images/civs/(civ_id).png",
         },
         last_matches: [],
         score: {
@@ -31,6 +87,8 @@ const app = new Vue({
             timer: false,
             interval: 30 * 1000,
         },
+        civ_id = 0,
+        player_index = -1,
     },
     created() {
 
@@ -55,7 +113,7 @@ const app = new Vue({
             const search_params = new URLSearchParams(url.search);
 
             // Available url parameters to override settings.
-            const params = ["steam_id", "hours_minus", "matches_count", "num_players"];
+            const params = ["steam_id", "hours_minus", "matches_count", "num_players", "from_date", "show_player_civs"];
 
             // Apply found url params to settings.
             for (let param of params) {
@@ -81,7 +139,8 @@ const app = new Vue({
             const result_json = await result.json();
 
             // Store last matches from API.
-            this.last_matches = result_json;
+            //this.last_matches = result_json;
+            this.last_matches = result_json.filter(match => (match.started * 1000) > this.timeframe);
 
             return result_json;
         },
