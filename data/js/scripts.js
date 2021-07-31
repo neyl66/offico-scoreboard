@@ -151,11 +151,32 @@ const app = new Vue({
 
         },
         change_hours() {
-                
-            const hours_minus = this.settings.hours_minus;
 
-            const timeframe_object = new Date(this.timeframe);
+            if (this.settings.from_date) {
+                // Get time and date from url.
+                const datetime = this.settings.from_date.split("-");
+                const date = datetime[0].split(".");
+                const time = datetime[1].split(":");
+
+                // Create new date.
+                let new_date = new Date(date);
+                new_date.setHours(time[0]);
+                new_date.setMinutes(time[1]);
+                new_date = new Date(new_date).setMinutes(time[1]);
+
+                // Save new date.
+                this.timeframe = new_date;
+                
+            } else {
+                this.timeframe = Date.now();
+            }
+
+            // Change hours based on hours.
+            let timeframe_object = new Date(this.timeframe);
+            const hours_minus = this.settings.hours_minus;
             timeframe_object.setHours(timeframe_object.getHours() - hours_minus);
+
+            // Save new timeframe.
             this.timeframe = Date.parse(timeframe_object);
 
         },
@@ -195,7 +216,6 @@ const app = new Vue({
             await this.get_last_matches(player_type).then(last_matches => {
             
                 if (last_matches.length < 1) {
-                    console.log("matches not found")
                     return;
                 }
 
@@ -287,8 +307,7 @@ const app = new Vue({
             }
             this.loading = true;
 
-            // update timeframe to current time.
-            this.timeframe = Date.now();
+            // Update timeframe to keep in sync.
             this.change_hours();
 
             if (this.settings.show_enemy_civs == "yes") {
