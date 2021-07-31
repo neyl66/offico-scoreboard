@@ -305,7 +305,6 @@ const app = new Vue({
             if (this.loading) {
                 return;
             }
-            
             this.loading = true;
 
             // Update timeframe to keep in sync.
