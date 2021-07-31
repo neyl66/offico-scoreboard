@@ -3,6 +3,7 @@ const civ_item = {
     props: [
         "match",
         "steam_id",
+        "steam_id_enemy",
         "civ_icon",
         "player_type",
         "index",
@@ -47,6 +48,8 @@ const civ_item = {
 
         if (this.player_type == "player") {
             this.player_index = this.match.players.findIndex(player => player.steam_id == this.steam_id);
+        } else if (this.steam_id_enemy) {
+            this.player_index = this.match.players.findIndex(player => player.steam_id == this.steam_id_enemy);
         } else if (this.player_type == "enemy") {
             this.player_index = this.match.players.findIndex(player => player.steam_id != this.steam_id);
         }
@@ -75,33 +78,41 @@ const app = new Vue({
             num_players: 2,
             from_date: "",
             show_player_civs: "yes",
+            show_enemy_civs: "yes",
+            steam_id_enemy: "",
         },
         endpoints: {
             "last_matches": "https://aoe2.net/api/player/matches?game=aoe2de",
             "civ_icon": "https://aoe2.club/assets/images/civs/(civ_id).png",
         },
-        last_matches: [],
+        last_matches:  {
+            player: [],
+            enemy: [],
+        },
         score: {
             wins: 0,
             losses: 0,
             missing: false,
             elo_change: 0,
         },
-        is_loading = false,
+        is_loading: false,
         current_match: {
             active: false,
             players: [],
         },
         periodic_check: {
             timer: false,
-            interval: 30 * 1000,
+            interval: 60 * 1000,
         },
-        civ_id = 0,
-        player_index = -1,
+        civ_id: 0,
+        player_index: -1,
     },
     computed: {
         last_matches_url: function() {
             return `${this.endpoints.last_matches}&steam_id=${this.settings.steam_id}&count=${this.settings.matches_count}`;
+        },
+        last_matches_url_enemy: function() {
+            return `${this.endpoints.last_matches}&steam_id=${this.settings.steam_id_enemy}&count=${this.settings.matches_count}`;
         },
     },
     created() {
@@ -112,7 +123,14 @@ const app = new Vue({
         // Deduct hours from current time.
         this.change_hours();
 
-        this.get_score();
+        if (this.settings.show_enemy_civs == "yes") {
+            this.get_score().then(() => {
+                this.get_score("enemy");
+            });
+        } else {
+            this.get_score();
+        }
+
         this.start_periodic_check();
 
     },
@@ -122,7 +140,7 @@ const app = new Vue({
             const search_params = new URLSearchParams(url.search);
 
             // Available url parameters to override settings.
-            const params = ["steam_id", "hours_minus", "matches_count", "num_players", "from_date", "show_player_civs"];
+            const params = ["steam_id", "hours_minus", "matches_count", "num_players", "from_date", "show_player_civs", "show_enemy_civs"];
 
             // Apply found url params to settings.
             for (let param of params) {
@@ -141,21 +159,40 @@ const app = new Vue({
             this.timeframe = Date.parse(timeframe_object);
 
         },
-        async get_last_matches() {
+        async get_last_matches(player_type = "player") {
+            
+            let last_matches_url;
+            if (player_type == "player") {
+                last_matches_url = this.last_matches_url;
+            } else if (player_type == "enemy") {
+                last_matches_url = this.last_matches_url_enemy;
+            }
 
             // Get last matches from API.
-            const result = await fetch(this.last_matches_url);
+            const result = await fetch(last_matches_url);
             const result_json = await result.json();
 
             // Store last matches from API.
-            //this.last_matches = result_json;
-            this.last_matches = result_json.filter(match => (match.started * 1000) > this.timeframe);
+            const filtered_last_matches = result_json.filter(match => match.num_players == this.settings.num_players);
+
+            if (player_type == "player") {
+                //const filtered_last_matches = result_json.filter(match => (match.started * 1000) > this.timeframe);
+                this.last_matches.player = filtered_last_matches;
+            } else if (player_type == "enemy") {
+                //const filtered_last_matches = result_json.filter(match => match.num_players == this.settings.num_players).slice(0, 8);
+                this.last_matches.enemy = filtered_last_matches;
+            }
 
             return result_json;
         },
-        get_score() {
+        async get_score(player_type = "player") {
 
-            this.get_last_matches().then(last_matches => {
+            if (player_type == "enemy") {
+                this.get_last_matches(player_type);
+                return;
+            }
+
+            await this.get_last_matches(player_type).then(last_matches => {
             
                 if (last_matches.length < 1) {
                     console.log("matches not found")
@@ -166,6 +203,7 @@ const app = new Vue({
                 this.reset_settings();
     
                 // Loop through last matches.
+                let first = false;
                 for (let i = 0; i < last_matches.length; i++) {
                     const match = last_matches[i];
     
@@ -178,6 +216,14 @@ const app = new Vue({
                     // Skip games based on number of players.
                     if (num_players != this.settings.num_players) {
                         continue;
+                    }
+
+                    // Get steam ID of enemy player in currently played game.
+                    if (!first) {
+                        const enemy_index = players.findIndex(player => player.steam_id != this.settings.steam_id);
+                        this.settings.steam_id_enemy = players[enemy_index].steam_id;
+
+                        first = true;
                     }
     
                     // Skip currently played game.
@@ -222,6 +268,8 @@ const app = new Vue({
     
             });
 
+            return;
+
         },
         reset_settings() {
 
@@ -237,10 +285,19 @@ const app = new Vue({
             if (this.loading) {
                 return;
             }
-
             this.loading = true;
 
-            this.get_score();
+            // update timeframe to current time.
+            this.timeframe = Date.now();
+            this.change_hours();
+
+            if (this.settings.show_enemy_civs == "yes") {
+                this.get_score().then(() => {
+                    this.get_score("enemy");
+                });
+            } else {
+                this.get_score();
+            }
 
         },
         start_periodic_check() {
