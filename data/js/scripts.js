@@ -55,7 +55,7 @@ const civ_item = {
         }
 
         if (this.player_index != -1) {
-            this.civ_icon_url = this.civ_icon.replace('civ_id', this.match.players[this.player_index].civ);
+            this.civ_icon_url = this.civ_icon.replace('civ_id', this.match.players[this.player_index].civ) + "?cache=off";
         }
 
     },
