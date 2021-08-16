@@ -333,6 +333,7 @@ const app = new Vue({
         },
         stop_periodic_check() {
 
+            // Reset timer.
             clearInterval(this.periodic_check.timer);
             this.periodic_check.timer = false;
 
