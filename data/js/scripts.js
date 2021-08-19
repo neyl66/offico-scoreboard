@@ -209,7 +209,12 @@ const app = new Vue({
         async get_score(player_type = "player") {
 
             if (player_type == "enemy") {
-                this.get_last_matches(player_type);
+                if (this.settings.steam_id_enemy != null) {
+                    this.get_last_matches(player_type);
+                } else {
+                    this.last_matches.enemy = [];
+                }
+
                 return;
             }
 
