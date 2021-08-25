@@ -308,6 +308,7 @@ const app = new Vue({
 
             // Enemy steam ID is required.
             if (!this.settings.steam_id_enemy) {
+                this.winrate.number_of_games = 0;
                 return;
             }
 
@@ -332,6 +333,7 @@ const app = new Vue({
 
             // Matches are required.
             if (filtered_last_matches.length < 1) {
+                this.winrate.number_of_games = 0;
                 return;
             }
 
