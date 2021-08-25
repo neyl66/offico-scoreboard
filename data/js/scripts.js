@@ -95,6 +95,12 @@ const app = new Vue({
             missing: false,
             elo_change: 0,
         },
+        winrate: {
+            percentage: "",
+            number_of_games: 0,
+            steam_id_enemy: "",
+            last_match_id: "",
+        },
         is_loading: false,
         current_match: {
             active: false,
@@ -125,7 +131,9 @@ const app = new Vue({
 
         if (this.settings.show_enemy_civs == "yes") {
             this.get_score().then(() => {
-                this.get_score("enemy");
+                this.get_score("enemy").then(() => {
+                    this.get_winrate();
+                });
             });
         } else {
             this.get_score();
@@ -296,6 +304,86 @@ const app = new Vue({
             return;
 
         },
+        async get_winrate() {
+
+            // Enemy steam ID is required.
+            if (!this.settings.steam_id_enemy) {
+                return;
+            }
+
+            // Skip if stored enemy steam id is same as current enemy steam id.
+            if (this.winrate.steam_id_enemy == this.settings.steam_id_enemy) {
+                return;
+            }
+
+            // Override number of matches to get and store the previous value.
+            const previous_matches_count = this.settings.matches_count;
+            this.settings.matches_count = "1000";
+
+            // Get last matches from API.
+            const result = await fetch(this.last_matches_url_enemy);
+            const result_json = await result.json();
+
+            // Restore number of matches to get to previous value.
+            this.settings.matches_count = previous_matches_count;
+
+            // Filter out matches that do not have our desired number of players.
+            const filtered_last_matches = result_json.filter(match => match.num_players == this.settings.num_players);
+
+            // Matches are required.
+            if (filtered_last_matches.length < 1) {
+                return;
+            }
+
+            // Prepare values.
+            let wins = 0;
+            let losses = 0;
+
+            // Loop through all enemy last matches.
+            for (let i = 0; i < filtered_last_matches.length; i++) {
+                const match = filtered_last_matches[i];
+
+                // Match data.
+                const players = match.players;
+
+                // Skip games without score data.
+                if (players[0].won == null) {
+                    this.score.missing = true;
+                    continue;
+                }
+
+                // Update number of wins and losses.
+                for (let j = 0; j < players.length; j++) {
+                    const player = players[j];
+
+                    if (player.steam_id == this.settings.steam_id) {
+
+                        if (player.won) {
+                            wins++;
+                        } else {
+                            losses++;
+                        }
+                        
+                    }
+
+                }
+
+            }
+
+            // Calculate winrate percentage.
+            let number_of_games = wins + losses;
+            let percentage = (wins / number_of_games) * 100;
+
+            // Convert float to 2 decimal.
+            if (!Number.isInteger(percentage)) {
+                percentage = percentage.toFixed(2);
+            }
+            
+            // Set winrate values.
+            this.winrate.percentage = percentage;
+            this.winrate.number_of_games = number_of_games;
+            this.winrate.steam_id_enemy = this.settings.steam_id_enemy;
+        },
         reset_settings() {
 
             this.score.wins = 0;
@@ -317,7 +405,9 @@ const app = new Vue({
 
             if (this.settings.show_enemy_civs == "yes") {
                 this.get_score().then(() => {
-                    this.get_score("enemy");
+                    this.get_score("enemy").then(() => {
+                        this.get_winrate();
+                    });
                 });
             } else {
                 this.get_score();
