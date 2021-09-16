@@ -1,9 +1,28 @@
+/**
+ * TODO:
+ * css file
+ * civ_icon_url change to aoe2.net images
+ * get aoe2.net strings once, then cache in localstorage
+ * https://aoe2.net/api/strings?game=aoe2de&language=en
+ * check civ_id => correct image
+ * 
+ * could change periodic check to just check periodically lastmatch endpoint
+ * and if match_id not same as the stored value, then get x last matches
+ * this can shave off 60 - 140 kb / periodic check
+ * 
+ * enemy steam_id is not always set, it can be "null"
+ * but it seems that the profile_i does always exist. so it could be used as fallback
+ */
+
+Vue.config.devtools = true
 
 const civ_item = {
     props: [
         "match",
         "steam_id",
+        "profile_id",
         "steam_id_enemy",
+        "profile_id_enemy",
         "civ_icon",
         "player_type",
         "index",
@@ -50,8 +69,14 @@ const civ_item = {
             this.player_index = this.match.players.findIndex(player => player.steam_id == this.steam_id);
         } else if (this.steam_id_enemy) {
             this.player_index = this.match.players.findIndex(player => player.steam_id == this.steam_id_enemy);
+        } else if (this.profile_id_enemy) {
+            this.player_index = this.match.players.findIndex(player => player.profile_id == this.profile_id_enemy);
         } else if (this.player_type == "enemy") {
-            this.player_index = this.match.players.findIndex(player => player.steam_id != this.steam_id);
+            if (this.steam_id_enemy) {
+                this.player_index = this.match.players.findIndex(player => player.steam_id != this.steam_id);
+            } else {
+                this.player_index = this.match.players.findIndex(player => player.profile_id != this.profile_id);
+            }
         }
 
         if (this.player_index != -1) {
@@ -73,6 +98,7 @@ const app = new Vue({
         timeframe: Date.now(),
         settings: {
             steam_id: "76561198020969037",
+            profile_id: "1404537",
             matches_count: "50",
             hours_minus: 14,
             num_players: 2,
@@ -80,6 +106,7 @@ const app = new Vue({
             show_player_civs: "yes",
             show_enemy_civs: "yes",
             steam_id_enemy: "",
+            profile_id_enemy: "",
         },
         endpoints: {
             "last_matches": "https://aoe2.net/api/player/matches?game=aoe2de",
@@ -118,7 +145,11 @@ const app = new Vue({
             return `${this.endpoints.last_matches}&steam_id=${this.settings.steam_id}&count=${this.settings.matches_count}`;
         },
         last_matches_url_enemy: function() {
-            return `${this.endpoints.last_matches}&steam_id=${this.settings.steam_id_enemy}&count=${this.settings.matches_count}`;
+            if (this.settings.steam_id_enemy) {
+                return `${this.endpoints.last_matches}&steam_id=${this.settings.steam_id_enemy}&count=${this.settings.matches_count}`;
+            } else {
+                return `${this.endpoints.last_matches}&profile_id=${this.settings.profile_id_enemy}&count=${this.settings.matches_count}`;
+            }
         },
     },
     created() {
@@ -162,6 +193,7 @@ const app = new Vue({
 
             if (this.settings.from_date) {
                 // Get time and date from url.
+                // Example date: 2021.9.12-22:20
                 const datetime = this.settings.from_date.split("-");
                 const date = datetime[0].split(".");
                 const time = datetime[1].split(":");
@@ -217,7 +249,7 @@ const app = new Vue({
         async get_score(player_type = "player") {
 
             if (player_type == "enemy") {
-                if (this.settings.steam_id_enemy != null) {
+                if (this.settings.steam_id_enemy != null || this.settings.profile_id_enemy != null) {
                     this.get_last_matches(player_type);
                 } else {
                     this.last_matches.enemy = [];
@@ -254,6 +286,7 @@ const app = new Vue({
                     // Get steam ID of enemy player in currently played game.
                     if (!first) {
                         const enemy_index = players.findIndex(player => player.steam_id != this.settings.steam_id);
+                        this.settings.profile_id_enemy = players[enemy_index].profile_id;
                         this.settings.steam_id_enemy = players[enemy_index].steam_id;
 
                         first = true;
@@ -306,14 +339,20 @@ const app = new Vue({
         },
         async get_winrate() {
 
+            /**
+             * TODO:
+             * if enemy played more than 1k games:
+             * apply algorithm to loop through our target's last 1000 games, use match id as comparation
+             */
+
             // Enemy steam ID is required.
-            if (!this.settings.steam_id_enemy) {
+            if (!this.settings.profile_id_enemy) {
                 this.winrate.number_of_games = 0;
                 return;
             }
 
             // Skip if stored enemy steam id is same as current enemy steam id.
-            if (this.winrate.steam_id_enemy == this.settings.steam_id_enemy) {
+            if (this.winrate.profile_id_enemy == this.settings.profile_id_enemy) {
                 return;
             }
 
@@ -385,6 +424,7 @@ const app = new Vue({
             this.winrate.percentage = percentage;
             this.winrate.number_of_games = number_of_games;
             this.winrate.steam_id_enemy = this.settings.steam_id_enemy;
+            this.winrate.profile_id_enemy = this.settings.profile_id_enemy;
         },
         reset_settings() {
 
