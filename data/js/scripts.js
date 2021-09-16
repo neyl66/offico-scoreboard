@@ -135,7 +135,7 @@ const app = new Vue({
         },
         periodic_check: {
             timer: false,
-            interval: 60 * 1000,
+            interval: 30 * 1000,
         },
         civ_id: 0,
         player_index: -1,
