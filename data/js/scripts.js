@@ -1,18 +1,3 @@
-/**
- * TODO:
- * css file
- * civ_icon_url change to aoe2.net images
- * get aoe2.net strings once, then cache in localstorage
- * https://aoe2.net/api/strings?game=aoe2de&language=en
- * check civ_id => correct image
- * 
- * could change periodic check to just check periodically lastmatch endpoint
- * and if match_id not same as the stored value, then get x last matches
- * this can shave off 60 - 140 kb / periodic check
- * 
- * enemy steam_id is not always set, it can be "null"
- * but it seems that the profile_i does always exist. so it could be used as fallback
- */
 
 Vue.config.devtools = true
 
@@ -230,7 +215,15 @@ const app = new Vue({
             }
 
             // Get last matches from API.
-            const result = await fetch(last_matches_url);
+            let result;
+            try {
+                result = await fetch(last_matches_url);
+                console.log(result.ok);
+            } catch (error) {
+                console.error(error);
+                return [];
+            }
+            
             const result_json = await result.json();
 
             // Store last matches from API.
@@ -249,7 +242,7 @@ const app = new Vue({
         async get_score(player_type = "player") {
 
             if (player_type == "enemy") {
-                if (this.settings.steam_id_enemy != null || this.settings.profile_id_enemy != null) {
+                if (this.settings.steam_id_enemy || this.settings.profile_id_enemy) {
                     this.get_last_matches(player_type);
                 } else {
                     this.last_matches.enemy = [];
@@ -330,20 +323,14 @@ const app = new Vue({
     
                 }
 
-                this.loading = false;
-    
+            }).then(() => {
+                this.is_loading = false;
             });
 
             return;
 
         },
         async get_winrate() {
-
-            /**
-             * TODO:
-             * if enemy played more than 1k games:
-             * apply algorithm to loop through our target's last 1000 games, use match id as comparation
-             */
 
             // Enemy steam ID is required.
             if (!this.settings.profile_id_enemy) {
@@ -437,10 +424,10 @@ const app = new Vue({
         },
         refresh_data() {
 
-            if (this.loading) {
+            if (this.is_loading) {
                 return;
             }
-            this.loading = true;
+            this.is_loading = true;
 
             // Update timeframe to keep in sync.
             this.change_hours();
