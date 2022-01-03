@@ -59,6 +59,13 @@
 			position: absolute;
 			top: 103px;
 			left: 10px;
+			filter: drop-shadow(1px 1px 0px black) drop-shadow(-1px -1px 0 black);
+		}
+		.player-civ.-won {
+			filter: drop-shadow(1px 1px 0px green) drop-shadow(-1px -1px 0 green);
+		}
+		.player-civ.-lost {
+			filter: drop-shadow(1px 1px 0px red) drop-shadow(-1px -1px 0 red);
 		}
 	</style>
 </head>
@@ -94,10 +101,10 @@
 	</main>
 
 	<script type="text/x-template" id="civ-item">
-		<img class="player-civ" v-if="index < 8 && player_index != -1" v-bind:src="civ_icon_url" alt="" v-bind:style="{left: left_px + 'px'}">
+		<img class="player-civ" v-bind:class="[border_class]" v-if="index < 8 && player_index != -1" v-bind:src="civ_icon_url" alt="" v-bind:style="{left: left_px + 'px'}">
     </script>
 
 	<script src="./data/js/vue.min.js?ver=2.1"></script>
-	<script src="./data/js/scripts.min.js?ver=2.2"></script>
+	<script src="./data/js/scripts.min.js?ver=2.3"></script>
 </body>
 </html>

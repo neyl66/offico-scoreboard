@@ -18,6 +18,7 @@ const civ_item = {
         return {
             player_index: -1,
             civ_icon_url: "",
+            border_class: "",
         }
     },
     computed: {
@@ -66,8 +67,15 @@ const civ_item = {
         }
 
         if (this.player_index != -1) {
+            // Set civ icon url from civ id -> civ name.
             const civ_name = this.civs[this.match.players[this.player_index].civ].toLowerCase();
             this.civ_icon_url = this.civ_icon.replace("civ_name", civ_name);
+
+            // Set border class based on who won if its available.
+            const won = this.match.players[this.player_index].won;
+            if (won !== null) {
+                this.border_class = (won) ? "-won" : "-lost";
+            }
         }
 
     },
