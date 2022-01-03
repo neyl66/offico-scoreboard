@@ -80,15 +80,15 @@
 			</div>
 
 			<div class="player-civs -player" v-if="settings.show_player_civs == 'yes'">
-				<civ-item v-for="(match, index) in last_matches.player.slice(0, 8)" v-bind:key="match.match_id" v-bind:match="match" v-bind:steam_id="settings.steam_id" v-bind:profile_id="settings.profile_id" v-bind:civ_icon="endpoints.civ_icon" player_type="player" steam_id_enemy="" profile_id_enemy="" v-bind:index="index"></civ-item>
+				<civ-item v-for="(match, index) in last_matches.player.slice(0, 8)" v-bind:key="match.match_id" v-bind:match="match" v-bind:steam_id="settings.steam_id" v-bind:profile_id="settings.profile_id" v-bind:civ_icon="endpoints.civ_icon" v-bind:civs="civs" player_type="player" steam_id_enemy="" profile_id_enemy="" v-bind:index="index"></civ-item>
 			</div>
 	
 			<div class="player-civs -enemy" v-if="settings.show_player_civs == 'yes' && settings.show_enemy_civs == 'yes'">
-				<civ-item v-for="(match, index) in last_matches.enemy.slice(0, 8)" v-bind:key="match.match_id" v-bind:match="match" steam_id="" v-bind:civ_icon="endpoints.civ_icon" player_type="enemy" v-bind:steam_id_enemy="settings.steam_id_enemy" v-bind:profile_id_enemy="settings.profile_id_enemy" v-bind:index="index"></civ-item>
+				<civ-item v-for="(match, index) in last_matches.enemy.slice(0, 8)" v-bind:key="match.match_id" v-bind:match="match" steam_id="" v-bind:civ_icon="endpoints.civ_icon" v-bind:civs="civs" player_type="enemy" v-bind:steam_id_enemy="settings.steam_id_enemy" v-bind:profile_id_enemy="settings.profile_id_enemy" v-bind:index="index"></civ-item>
 			</div>
 
 			<div class="player-civs -enemy" v-if="settings.show_player_civs == 'yes' && settings.show_enemy_civs != 'yes'">
-				<civ-item v-for="(match, index) in last_matches.player.slice(0, 8)" v-bind:key="match.match_id" v-bind:match="match" v-bind:steam_id="settings.steam_id" v-bind:civ_icon="endpoints.civ_icon" player_type="enemy" steam_id_enemy="" v-bind:index="index"></civ-item>
+				<civ-item v-for="(match, index) in last_matches.player.slice(0, 8)" v-bind:key="match.match_id" v-bind:match="match" v-bind:steam_id="settings.steam_id" v-bind:civ_icon="endpoints.civ_icon" v-bind:civs="civs" player_type="enemy" steam_id_enemy="" v-bind:index="index"></civ-item>
 			</div>
 		</div>
 	</main>
@@ -98,6 +98,6 @@
     </script>
 
 	<script src="./data/js/vue.min.js?ver=2.1"></script>
-	<script src="./data/js/scripts.min.js?ver=2.1"></script>
+	<script src="./data/js/scripts.min.js?ver=2.2"></script>
 </body>
 </html>

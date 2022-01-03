@@ -9,6 +9,7 @@ const civ_item = {
         "steam_id_enemy",
         "profile_id_enemy",
         "civ_icon",
+        "civs",
         "player_type",
         "index",
     ],
@@ -65,7 +66,8 @@ const civ_item = {
         }
 
         if (this.player_index != -1) {
-            this.civ_icon_url = this.civ_icon.replace('civ_id', this.match.players[this.player_index].civ) + "?cache=purge";
+            const civ_name = this.civs[this.match.players[this.player_index].civ].toLowerCase();
+            this.civ_icon_url = this.civ_icon.replace("civ_name", civ_name);
         }
 
     },
@@ -95,7 +97,7 @@ const app = new Vue({
         },
         endpoints: {
             "last_matches": "https://aoe2.net/api/player/matches?game=aoe2de",
-            "civ_icon": "https://aoe2.club/assets/images/civs/(civ_id).png",
+            "civ_icon": "https://aoe2.net/assets/images/crests/25x25/civ_name.png",
         },
         last_matches:  {
             player: [],
@@ -124,6 +126,7 @@ const app = new Vue({
         },
         civ_id: 0,
         player_index: -1,
+        civs: {},
     },
     computed: {
         last_matches_url: function() {
@@ -144,6 +147,9 @@ const app = new Vue({
 
         // Deduct hours from current time.
         this.change_hours();
+
+        // Get list of civ names.
+        this.get_civ_names();
 
         if (this.settings.show_enemy_civs == "yes") {
             this.get_score().then(() => {
@@ -205,6 +211,17 @@ const app = new Vue({
             this.timeframe = Date.parse(timeframe_object);
 
         },
+        async get_civ_names() {
+            const response = await fetch("https://aoe2.net/api/strings?game=aoe2de&language=en");
+            if (!response.ok) return;
+
+            const json = await response.json();
+            const civs = {};
+            json.civ.forEach((el) => {
+                civs[el.id] = el.string;
+            });
+            this.civs = civs;
+        },
         async get_last_matches(player_type = "player") {
             
             let last_matches_url;
@@ -218,7 +235,7 @@ const app = new Vue({
             let result;
             try {
                 result = await fetch(last_matches_url);
-                console.log(result.ok);
+                if (!result.ok) return [];
             } catch (error) {
                 console.error(error);
                 return [];
